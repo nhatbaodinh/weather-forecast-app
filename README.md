@@ -39,4 +39,11 @@ Trong mã nguồn, tìm và thay thế giá trị API Key trong mã:
 
 ```java
 String apiKey = "YOUR_API_KEY";
+```
 
+### Bước 5: Chạy Ứng Dụng
+Sử dụng Maven để chạy ứng dụng:
+
+```bash
+mvn spring-boot:run
+```

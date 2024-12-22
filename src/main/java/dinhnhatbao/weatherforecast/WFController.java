@@ -1,21 +1,21 @@
 package dinhnhatbao.weatherforecast;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.TextField;
-import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import org.json.JSONObject;
 
-
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -54,9 +54,9 @@ public class WFController {
   @FXML
   private Label accessDateTimeLabel;
   @FXML
-  private AnchorPane anchorPane;
-  @FXML
   private Button themeButton;
+  @FXML
+  private Button detailButton;
 
   private static final String API_KEY = "7c1388f022de59cbcc9be442d5fcc866";
   private static final String API_URL = "https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=%s";
@@ -67,13 +67,13 @@ public class WFController {
 
   @FXML
   public void initialize() {
-    Scene scene = themeButton.getScene(); // Lấy Scene từ themeButton
+    Scene scene = themeButton.getScene();
     if (scene != null) {
       scene.getStylesheets().add(getClass().getResource("light-theme.css").toExternalForm());
     }
-    themeButton.setText("Light"); // Đặt tên ban đầu cho nút theme
+    themeButton.setText("Light");
 
-    formatButton.setText("Metric"); // Set initial button text
+    formatButton.setText("Metric");
     searchButton.setOnAction(event -> searchWeather());
     historyButton.setOnAction(event -> onHistoryButtonClick());
   }
@@ -176,87 +176,80 @@ public class WFController {
     historyStage.show();
   }
 
-  @FXML
-  private void onMapButtonClick() {
-    String city = cityTextField.getText().trim();
-    if (!city.isEmpty()) {
-      try {
-        // Mã hóa tên thành phố để tạo URL hợp lệ
-        String encodedCity = URLEncoder.encode(city, StandardCharsets.UTF_8.toString());
-
-        // Gọi API để lấy tọa độ (lat, lon) của thành phố
-        String apiUrl = String.format("https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s", encodedCity, API_KEY);
-        URL url = new URL(apiUrl);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        StringBuilder response = new StringBuilder();
-        String inputLine;
-        while ((inputLine = in.readLine()) != null) {
-          response.append(inputLine);
-        }
-        in.close();
-
-        // Xử lý dữ liệu JSON để lấy lat và lon
-        JSONObject jsonResponse = new JSONObject(response.toString());
-        double lat = jsonResponse.getJSONObject("coord").getDouble("lat");
-        double lon = jsonResponse.getJSONObject("coord").getDouble("lon");
-
-        // Tạo URL Google Maps với lat và lon
-        String googleMapsUrl = String.format("https://www.google.com/maps/search/?api=1&query=%f,%f", lat, lon);
-
-        // Tạo WebView để hiển thị Google Maps
-        WebView webView = new WebView();
-        webView.getEngine().setJavaScriptEnabled(true); // Kích hoạt JavaScript nếu cần
-        webView.getEngine().load(googleMapsUrl);
-
-        // Tạo VBox chứa WebView
-        VBox vbox = new VBox(webView);
-        vbox.setPadding(new javafx.geometry.Insets(10));
-        vbox.setSpacing(8);
-
-        // Tạo một Scene mới cho cửa sổ chứa bản đồ
-        Scene mapScene = new Scene(vbox, 800, 600); // Kích thước cửa sổ
-        Stage mapStage = new Stage();
-        mapStage.setTitle("Google Maps");
-        mapStage.setScene(mapScene);
-
-        // Hiển thị cửa sổ mới
-        mapStage.show();
-
-      } catch (Exception e) {
-        e.printStackTrace();
-        javafx.application.Platform.runLater(() -> cityNameLabel.setText("Error fetching map data!"));
-      }
-    } else {
-      cityNameLabel.setText("Please enter a city!");
-    }
-  }
-
-  private boolean isLightTheme = true; // Biến theo dõi trạng thái theme
+  private boolean isLightTheme = true;
 
   @FXML
   private void onThemeButtonClick() {
-    Scene scene = themeButton.getScene(); // Lấy Scene từ nút
+    Scene scene = themeButton.getScene();
     if (isLightTheme) {
-      // Chuyển sang Dark Theme
       scene.getStylesheets().clear();
       scene.getStylesheets().add(getClass().getResource("dark-theme.css").toExternalForm());
-      themeButton.setText("Dark"); // Cập nhật tên nút
+      themeButton.setText("Dark");
     } else {
-      // Quay lại Light Theme
       scene.getStylesheets().clear();
       scene.getStylesheets().add(getClass().getResource("light-theme.css").toExternalForm());
-      themeButton.setText("Light"); // Cập nhật tên nút
+      themeButton.setText("Light");
     }
-    isLightTheme = !isLightTheme; // Đảo trạng thái theme
+    isLightTheme = !isLightTheme;
   }
 
   @FXML
   private void onFormatButtonClick() {
-    isMetric = !isMetric; // Toggle between metric and imperial units
+    isMetric = !isMetric;
     formatButton.setText(isMetric ? "Metric" : "Imperial");
-    searchWeather(); // Reload data with updated format
+    searchWeather();
+  }
+
+  @FXML
+  private void onDetailButtonClick() {
+    try {
+      String cityName = cityNameLabel.getText();
+      String weatherDetails = descriptionLabel.getText();
+      String[] forecast = fetchForecastData(cityName);
+
+      FXMLLoader loader = new FXMLLoader(getClass().getResource("detail-view.fxml"));
+      Parent detailRoot = loader.load();
+
+      DetailController detailController = loader.getController();
+      detailController.setCityData(cityName, weatherDetails, forecast);
+
+      Stage currentStage = (Stage) cityTextField.getScene().getWindow();
+      currentStage.setScene(new Scene(detailRoot));
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  private String[] fetchForecastData(String city) {
+    String[] forecast = new String[3];
+    try {
+      String encodedCity = URLEncoder.encode(city, StandardCharsets.UTF_8.toString());
+      String urlString = String.format("https://api.openweathermap.org/data/2.5/forecast?q=%s&appid=%s&units=%s",
+          encodedCity, API_KEY, isMetric ? "metric" : "imperial");
+
+      URL url = new URL(urlString);
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setRequestMethod("GET");
+
+      BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+      StringBuilder response = new StringBuilder();
+      String inputLine;
+      while ((inputLine = in.readLine()) != null) {
+        response.append(inputLine);
+      }
+      in.close();
+
+      JSONObject jsonResponse = new JSONObject(response.toString());
+      for (int i = 0; i < 3; i++) {
+        JSONObject dayData = jsonResponse.getJSONArray("list").getJSONObject(i * 8);
+        String date = dayData.getString("dt_txt");
+        double temp = dayData.getJSONObject("main").getDouble("temp");
+        String description = dayData.getJSONArray("weather").getJSONObject(0).getString("description");
+        forecast[i] = String.format("%s: %s, %.1f%s", date, description, temp, isMetric ? "°C" : "°F");
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    return forecast;
   }
 }

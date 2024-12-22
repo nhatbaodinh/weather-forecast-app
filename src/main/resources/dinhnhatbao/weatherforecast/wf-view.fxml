@@ -138,9 +138,9 @@
         <HBox id="bottom-buttons-box" fx:id="bottomButtonsHBox" alignment="CENTER" layoutY="647.0" prefHeight="29.0" prefWidth="416.0" spacing="40.0">
             <children>
                 <Button id="history-button" fx:id="historyButton" mnemonicParsing="false" onAction="#onHistoryButtonClick" prefHeight="29.0" prefWidth="70.0" text="History" />
-                <Button id="map-button" fx:id="mapButton" mnemonicParsing="false" onAction="#onMapButtonClick" prefHeight="29.0" prefWidth="70.0" text="Map" />
                 <Button id="theme-button" fx:id="themeButton" mnemonicParsing="false" onAction="#onThemeButtonClick" prefHeight="29.0" prefWidth="70.0" text="Theme" />
                 <Button id="format-button" fx:id="formatButton" mnemonicParsing="false" onAction="#onFormatButtonClick" prefHeight="29.0" prefWidth="70.0" text="Format" />
+                <Button id="detail-button" fx:id="detailButton" mnemonicParsing="false" onAction="#onDetailButtonClick" prefHeight="29.0" prefWidth="70.0" text="More" />
             </children>
         </HBox>
     </children>
