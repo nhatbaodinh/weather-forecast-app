@@ -42,8 +42,4 @@ String apiKey = "YOUR_API_KEY";
 ```
 
 ### Bước 5: Chạy Ứng Dụng
-Sử dụng Maven để chạy ứng dụng:
-
-```bash
-mvn spring-boot:run
-```
+Run RunWeatherApp.java để chạy ứng dụng.
